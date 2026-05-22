@@ -54,7 +54,38 @@ window.addEventListener('DOMContentLoaded', () => {
   // マップキャンバスと十字キー初期化
   initMapCanvas();
   initDpad();
+  // 左右設定を読み込み
+  loadDpadSide();
 });
+
+// === 十字キー左右切替 ===
+const DPAD_SIDE_KEY = 'dragon_battle_dpad_side';
+
+function loadDpadSide() {
+  const side = localStorage.getItem(DPAD_SIDE_KEY) || 'right';
+  applyDpadSide(side);
+}
+
+function applyDpadSide(side) {
+  const area = document.getElementById('control-area');
+  if (!area) return;
+  if (side === 'left') {
+    area.classList.add('lefty');
+  } else {
+    area.classList.remove('lefty');
+  }
+  // キャンバスサイズ再計算（レイアウト変化のため）
+  setTimeout(() => {
+    if (typeof resizeMapCanvas === 'function') resizeMapCanvas();
+  }, 50);
+}
+
+function toggleDpadSide() {
+  const current = localStorage.getItem(DPAD_SIDE_KEY) || 'right';
+  const next = current === 'right' ? 'left' : 'right';
+  localStorage.setItem(DPAD_SIDE_KEY, next);
+  applyDpadSide(next);
+}
 
 // === ゲーム開始 ===
 function startGame() {

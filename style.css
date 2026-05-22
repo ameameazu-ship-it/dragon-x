@@ -146,29 +146,29 @@ html, body {
   justify-content: space-between;
   align-items: center;
   background: linear-gradient(180deg, #1a1a2e, #16213e);
-  padding: 10px 15px;
-  border-bottom: 3px solid #e94560;
+  padding: 5px 10px;
+  border-bottom: 2px solid #e94560;
   flex-shrink: 0;
-  gap: 10px;
+  gap: 8px;
 }
 
 .status-item {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.95rem;
+  gap: 4px;
+  font-size: 0.8rem;
 }
 
 .status-icon {
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .hp-bar {
   position: relative;
-  width: 120px;
-  height: 22px;
+  width: 110px;
+  height: 18px;
   background: rgba(0,0,0,0.5);
-  border-radius: 11px;
+  border-radius: 9px;
   overflow: hidden;
   border: 2px solid #fff;
 }
@@ -201,7 +201,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   text-shadow: 1px 1px 2px #000;
 }
 
@@ -231,8 +231,8 @@ html, body {
 /* 隣接時のアクションボタン */
 .adjacent-actions {
   display: flex;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 6px;
+  padding: 6px 10px;
   background: rgba(0,0,0,0.4);
   flex-shrink: 0;
   animation: pulseGlow 1.5s ease-in-out infinite;
@@ -245,15 +245,15 @@ html, body {
 
 .btn-adj {
   flex: 1;
-  padding: 14px 8px;
-  font-size: 1.05rem;
+  padding: 10px 8px;
+  font-size: 0.95rem;
   font-weight: bold;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   color: white;
   font-family: inherit;
-  box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+  box-shadow: 0 3px 0 rgba(0,0,0,0.3);
 }
 
 .btn-fight {
@@ -272,33 +272,42 @@ html, body {
 /* 操作エリア：十字キー＋メニュー */
 .control-area {
   display: flex;
-  gap: 10px;
-  padding: 10px;
-  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  gap: 8px;
+  padding: 6px 8px;
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
   background: linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.7));
   flex-shrink: 0;
   align-items: center;
 }
 
-/* 十字キー */
+/* デフォルトは十字キー右、メニュー左（右利き想定） */
+/* HTMLでは action-side が先に書かれていて左、dpad が後で右になる */
+
+/* 左利きモード：十字キーを左に */
+.control-area.lefty {
+  flex-direction: row-reverse;
+}
+
+/* 十字キー（半分くらいのサイズに） */
 .dpad {
   display: grid;
-  grid-template-columns: 50px 50px 50px;
-  grid-template-rows: 50px 50px 50px;
+  grid-template-columns: 32px 32px 32px;
+  grid-template-rows: 32px 32px 32px;
   grid-template-areas:
     ".    up   ."
     "left center right"
     ".    down ."
   ;
-  gap: 4px;
+  gap: 3px;
+  flex-shrink: 0;
 }
 
 .dpad-btn {
   background: linear-gradient(135deg, #455a64, #263238);
   color: white;
   border: 2px solid #607d8b;
-  border-radius: 10px;
-  font-size: 1.4rem;
+  border-radius: 7px;
+  font-size: 0.95rem;
   font-weight: bold;
   cursor: pointer;
   font-family: inherit;
@@ -308,8 +317,9 @@ html, body {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  box-shadow: 0 3px 0 rgba(0,0,0,0.5);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.5);
   transition: transform 0.05s;
+  padding: 0;
 }
 
 .dpad-up    { grid-area: up; }
@@ -325,7 +335,7 @@ html, body {
 }
 
 .dpad-btn:active:not(.dpad-center) {
-  transform: translateY(2px);
+  transform: translateY(1px);
   box-shadow: 0 1px 0 rgba(0,0,0,0.5);
   background: linear-gradient(135deg, #ff6b6b, #e94560);
 }
@@ -333,52 +343,53 @@ html, body {
 /* サイドのメニューボタン */
 .action-side {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
 }
 
 .btn-side {
-  padding: 10px 6px;
-  font-size: 0.85rem;
+  padding: 5px 4px;
+  font-size: 0.7rem;
   font-weight: bold;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   color: white;
   font-family: inherit;
-  line-height: 1.2;
-  box-shadow: 0 3px 0 rgba(0,0,0,0.3);
+  line-height: 1.1;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.3);
   text-align: center;
+  min-height: 38px;
 }
 
 .btn-side.btn-shop  { background: linear-gradient(135deg, #ff9800, #e65100); }
 .btn-side.btn-menu  { background: linear-gradient(135deg, #607d8b, #37474f); }
+.btn-side.btn-flip  { background: linear-gradient(135deg, #00bcd4, #00838f); }
 .btn-side.btn-narrow {
   background: linear-gradient(135deg, #9c27b0, #6a1b9a);
   animation: narrowGlow 1.5s ease-in-out infinite;
 }
 
 @keyframes narrowGlow {
-  0%, 100% { box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 0 0 rgba(156,39,176,0); }
-  50% { box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 0 15px rgba(156,39,176,0.9); }
+  0%, 100% { box-shadow: 0 2px 0 rgba(0,0,0,0.3), 0 0 0 rgba(156,39,176,0); }
+  50% { box-shadow: 0 2px 0 rgba(0,0,0,0.3), 0 0 12px rgba(156,39,176,0.9); }
 }
 
 .btn-side:active {
-  transform: translateY(2px);
+  transform: translateY(1px);
   box-shadow: 0 1px 0 rgba(0,0,0,0.3);
 }
 
 /* === EXPバー === */
 .exp-bar {
   position: relative;
-  height: 20px;
+  height: 14px;
   background: rgba(0,0,0,0.5);
-  margin: 0 10px;
-  margin-top: 8px;
-  border-radius: 10px;
+  margin: 4px 10px 0;
+  border-radius: 7px;
   overflow: hidden;
-  border: 2px solid #fff;
+  border: 1px solid #fff;
   flex-shrink: 0;
 }
 
@@ -395,21 +406,21 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   text-shadow: 1px 1px 2px #000;
 }
 
 /* === メッセージボックス === */
 .message-box {
   background: rgba(0,0,0,0.7);
-  margin: 6px 10px;
-  padding: 10px 15px;
-  border-radius: 10px;
-  border: 2px solid #4ecdc4;
-  font-size: 0.9rem;
+  margin: 4px 10px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid #4ecdc4;
+  font-size: 0.78rem;
   text-align: center;
   flex-shrink: 0;
-  min-height: 42px;
+  min-height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;

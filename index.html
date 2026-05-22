@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ドラゴンバトルロイヤル（仮）</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- タイトル画面 -->
+<div id="title-screen" class="screen active">
+  <div class="title-bg"></div>
+  <h1 class="game-title">ドラゴン<br>バトル<br>ロイヤル</h1>
+  <p class="subtitle">（仮）</p>
+  <button class="btn-primary" onclick="startGame()">▶ はじめる</button>
+  <button class="btn-secondary" onclick="loadGame()" id="load-btn" style="display:none">つづきから</button>
+  <p class="hint">ドラゴンを倒して つよくなろう！</p>
+</div>
+
+<!-- 冒険画面（フィールド） -->
+<div id="field-screen" class="screen">
+  <div class="status-bar">
+    <div class="status-item">
+      <span class="status-icon">⚔️</span>
+      <span>Lv.<span id="player-level">1</span></span>
+    </div>
+    <div class="status-item">
+      <div class="hp-bar">
+        <div class="hp-fill" id="player-hp-fill"></div>
+        <span class="hp-text"><span id="player-hp">20</span>/<span id="player-max-hp">20</span></span>
+      </div>
+    </div>
+    <div class="status-item">
+      <span class="status-icon">💰</span>
+      <span id="player-gold">0</span>
+    </div>
+  </div>
+
+  <div class="field-container" id="field-bg">
+    <div class="field-scene" id="field-scene">
+      <!-- 風景がここに描画される -->
+    </div>
+    <div class="player-sprite" id="field-player">🧒</div>
+    <div class="pet-sprite" id="field-pet" style="display:none">🐶</div>
+  </div>
+
+  <div class="exp-bar">
+    <div class="exp-fill" id="exp-fill"></div>
+    <span class="exp-text">EXP <span id="player-exp">0</span>/<span id="player-next-exp">10</span></span>
+  </div>
+
+  <div class="action-buttons">
+    <button class="btn-action btn-explore" onclick="explore()">🔍 冒険する</button>
+    <button class="btn-action btn-narrow" onclick="enterNarrowPath()" id="narrow-btn" style="display:none">🏔️ 狭い道へ</button>
+    <button class="btn-action btn-shop" onclick="openShop()">🏪 お店</button>
+    <button class="btn-action btn-menu" onclick="openMenu()">📋 メニュー</button>
+  </div>
+
+  <div class="message-box" id="field-message">
+    草原を探検しよう！
+  </div>
+</div>
+
+<!-- バトル画面 -->
+<div id="battle-screen" class="screen">
+  <div class="battle-bg" id="battle-bg"></div>
+  
+  <div class="enemy-area">
+    <div class="enemy-name" id="enemy-name">ドラゴン</div>
+    <div class="enemy-hp-bar">
+      <div class="enemy-hp-fill" id="enemy-hp-fill"></div>
+      <span class="enemy-hp-text"><span id="enemy-hp">10</span>/<span id="enemy-max-hp">10</span></span>
+    </div>
+    <div class="enemy-sprite" id="enemy-sprite">🐉</div>
+  </div>
+
+  <div class="battle-message" id="battle-message">ドラゴンが あらわれた！</div>
+
+  <div class="player-battle-area">
+    <div class="player-battle-sprite">🧒</div>
+    <div class="player-battle-pet" id="battle-pet" style="display:none">🐶</div>
+    <div class="player-battle-info">
+      <div>HP: <span id="battle-player-hp">20</span>/<span id="battle-player-max-hp">20</span></div>
+      <div class="battle-hp-bar">
+        <div class="battle-hp-fill" id="battle-player-hp-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="battle-buttons">
+    <button class="btn-battle btn-attack" onclick="playerAttack()">⚔️ こうげき</button>
+    <button class="btn-battle btn-pet" onclick="petAttack()" id="pet-attack-btn" style="display:none">🐾 ペット</button>
+    <button class="btn-battle btn-item" onclick="openBattleItems()">🧪 アイテム</button>
+    <button class="btn-battle btn-run" onclick="runAway()">🏃 にげる</button>
+  </div>
+</div>
+
+<!-- ショップ画面 -->
+<div id="shop-screen" class="screen">
+  <h2 class="shop-title">🏪 ドラゴン商店</h2>
+  <div class="shop-gold">💰 <span id="shop-gold">0</span> G</div>
+  
+  <div class="shop-tabs">
+    <button class="tab-btn active" onclick="switchShopTab('item')">アイテム</button>
+    <button class="tab-btn" onclick="switchShopTab('food')">食料</button>
+    <button class="tab-btn" onclick="switchShopTab('clothes')">服</button>
+    <button class="tab-btn" onclick="switchShopTab('pet')">ペット</button>
+  </div>
+
+  <div class="shop-items" id="shop-items">
+    <!-- 商品がここに描画される -->
+  </div>
+
+  <button class="btn-close" onclick="closeShop()">× 閉じる</button>
+</div>
+
+<!-- メニュー画面 -->
+<div id="menu-screen" class="screen">
+  <h2 class="menu-title">📋 メニュー</h2>
+  
+  <div class="menu-section">
+    <h3>ステータス</h3>
+    <div class="status-grid">
+      <div>Lv: <span id="menu-level">1</span></div>
+      <div>HP: <span id="menu-hp">20</span>/<span id="menu-max-hp">20</span></div>
+      <div>こうげき: <span id="menu-attack">5</span></div>
+      <div>EXP: <span id="menu-exp">0</span></div>
+      <div>たおした数: <span id="menu-defeated">0</span></div>
+      <div>💰 <span id="menu-gold">0</span> G</div>
+    </div>
+  </div>
+
+  <div class="menu-section">
+    <h3>👕 そうび</h3>
+    <div id="equipment-list">なし</div>
+  </div>
+
+  <div class="menu-section">
+    <h3>🐾 ペット</h3>
+    <div id="pet-list">なし</div>
+  </div>
+
+  <div class="menu-section">
+    <h3>🎒 もちもの</h3>
+    <div id="items-list">なし</div>
+  </div>
+
+  <div class="menu-buttons">
+    <button class="btn-menu-action" onclick="saveGame()">💾 セーブ</button>
+    <button class="btn-menu-action btn-danger" onclick="resetGame()">🔄 リセット</button>
+    <button class="btn-menu-action" onclick="closeMenu()">× 閉じる</button>
+  </div>
+</div>
+
+<!-- 落とし穴の中の空間 -->
+<div id="pit-screen" class="screen">
+  <div class="pit-bg"></div>
+  <h2 class="pit-title">⚰️ 倒した敵の魂の間 ⚰️</h2>
+  <p class="pit-subtitle">ここには これまで 倒した 敵の 名前が 刻まれている...</p>
+  
+  <div class="defeated-list" id="defeated-list">
+    <!-- 倒した敵の名前がここに -->
+  </div>
+
+  <div class="pit-ladder-area">
+    <button class="btn-ladder" onclick="climbLadder()" id="ladder-btn" style="display:none">
+      🪜 梯子を のぼる
+    </button>
+    <button class="btn-search" onclick="searchLadder()" id="search-btn">
+      🔍 梯子を さがす
+    </button>
+  </div>
+
+  <p class="pit-hint" id="pit-hint">梯子を さがそう！</p>
+</div>
+
+<!-- レベルアップ表示 -->
+<div id="levelup-popup" class="popup">
+  <div class="popup-content levelup-content">
+    <h2>🎉 レベルアップ！ 🎉</h2>
+    <p>Lv.<span id="levelup-from"></span> → Lv.<span id="levelup-to"></span></p>
+    <p>HP+5 こうげき+2</p>
+    <button class="btn-popup" onclick="closePopup('levelup-popup')">OK</button>
+  </div>
+</div>
+
+<!-- 勝利表示 -->
+<div id="victory-popup" class="popup">
+  <div class="popup-content victory-content">
+    <h2 id="victory-title">🎊 勝利！ 🎊</h2>
+    <p><span id="victory-enemy"></span> を たおした！</p>
+    <p>EXP +<span id="victory-exp"></span></p>
+    <p>💰 +<span id="victory-gold"></span> G</p>
+    <div id="victory-item-area" style="display:none">
+      <p>✨ <span id="victory-item"></span> を てにいれた！</p>
+    </div>
+    <button class="btn-popup" onclick="closeVictoryPopup()">OK</button>
+  </div>
+</div>
+
+<!-- ゲームオーバー -->
+<div id="gameover-popup" class="popup">
+  <div class="popup-content gameover-content">
+    <h2>💀 やられた... 💀</h2>
+    <p>HPが 0に なった</p>
+    <p>持っていた お金の 半分を 落とした</p>
+    <button class="btn-popup" onclick="returnToBase()">家にもどる</button>
+  </div>
+</div>
+
+<!-- バトル中アイテムメニュー -->
+<div id="battle-items-popup" class="popup">
+  <div class="popup-content">
+    <h2>🧪 アイテムを つかう</h2>
+    <div id="battle-items-list"></div>
+    <button class="btn-popup" onclick="closePopup('battle-items-popup')">もどる</button>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

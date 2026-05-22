@@ -4,16 +4,16 @@
 
 // === 通常ドラゴン（敵） ===
 const NORMAL_DRAGONS = [
-  { name: "こドラゴン",      emoji: "🐲", hp: 8,   attack: 2, exp: 5,   gold: 3,   level: 1 },
-  { name: "くさドラゴン",    emoji: "🐉", hp: 12,  attack: 3, exp: 8,   gold: 5,   level: 1 },
-  { name: "いわドラゴン",    emoji: "🦖", hp: 18,  attack: 4, exp: 12,  gold: 8,   level: 2 },
-  { name: "かわドラゴン",    emoji: "🐊", hp: 22,  attack: 5, exp: 15,  gold: 10,  level: 2 },
-  { name: "もりドラゴン",    emoji: "🐍", hp: 28,  attack: 6, exp: 20,  gold: 13,  level: 3 },
-  { name: "ほのおドラゴン",  emoji: "🔥", hp: 35,  attack: 8, exp: 28,  gold: 18,  level: 4 },
-  { name: "こおりドラゴン",  emoji: "❄️", hp: 42,  attack: 9, exp: 35,  gold: 22,  level: 5 },
-  { name: "かみなりドラゴン",emoji: "⚡", hp: 50,  attack: 11,exp: 45,  gold: 28,  level: 6 },
-  { name: "やみドラゴン",    emoji: "🌑", hp: 60,  attack: 13,exp: 55,  gold: 35,  level: 7 },
-  { name: "ひかりドラゴン",  emoji: "✨", hp: 72,  attack: 15,exp: 70,  gold: 45,  level: 8 },
+  { name: "こドラゴン",      emoji: "🐲", hp: 6,   attack: 1, exp: 5,   gold: 4,   level: 1 },
+  { name: "くさドラゴン",    emoji: "🐉", hp: 10,  attack: 2, exp: 8,   gold: 6,   level: 1 },
+  { name: "いわドラゴン",    emoji: "🦖", hp: 15,  attack: 3, exp: 12,  gold: 10,  level: 2 },
+  { name: "かわドラゴン",    emoji: "🐊", hp: 20,  attack: 4, exp: 15,  gold: 12,  level: 2 },
+  { name: "もりドラゴン",    emoji: "🐍", hp: 26,  attack: 5, exp: 20,  gold: 15,  level: 3 },
+  { name: "ほのおドラゴン",  emoji: "🔥", hp: 33,  attack: 7, exp: 28,  gold: 20,  level: 4 },
+  { name: "こおりドラゴン",  emoji: "❄️", hp: 40,  attack: 8, exp: 35,  gold: 25,  level: 5 },
+  { name: "かみなりドラゴン",emoji: "⚡", hp: 48,  attack: 10,exp: 45,  gold: 30,  level: 6 },
+  { name: "やみドラゴン",    emoji: "🌑", hp: 58,  attack: 12,exp: 55,  gold: 38,  level: 7 },
+  { name: "ひかりドラゴン",  emoji: "✨", hp: 70,  attack: 14,exp: 70,  gold: 48,  level: 8 },
 ];
 
 // === ボスドラゴン ===

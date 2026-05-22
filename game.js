@@ -293,12 +293,16 @@ function encounterEnemy(isBoss) {
     game.isBossBattle = false;
   }
   
+  console.log('[ENCOUNTER] new enemy:', game.currentEnemy.name, 'HP:', game.currentEnemy.currentHp);
   startBattle();
 }
 
 // === バトル開始 ===
 function startBattle() {
   showScreen('battle-screen');
+  
+  // バトルボタンを必ず有効化（前回バトルでdisableされたまま残っているケースを防ぐ）
+  enableBattleButtons();
   
   const enemy = game.currentEnemy;
   document.getElementById('enemy-name').textContent = enemy.name;

@@ -24,7 +24,13 @@ html, body {
 /* === スクリーン共通 === */
 .screen {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;  /* iOS Safariのツールバー対応 */
   display: none;
   flex-direction: column;
   overflow: hidden;
@@ -367,6 +373,12 @@ html, body {
 /* === バトル画面 === */
 #battle-screen {
   background: linear-gradient(180deg, #4a0e0e 0%, #2a0606 100%);
+  display: none;
+  flex-direction: column;
+}
+
+#battle-screen.active {
+  display: flex;
 }
 
 .battle-bg {
@@ -376,35 +388,40 @@ html, body {
     radial-gradient(circle at 50% 30%, rgba(255,100,100,0.3) 0%, transparent 50%),
     repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 20px);
   pointer-events: none;
+  z-index: 0;
 }
 
 .enemy-area {
   position: relative;
   flex: 1;
+  min-height: 0;  /* flex子要素の縮小を許可 */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 10px;
   z-index: 2;
+  overflow: hidden;
 }
 
 .enemy-name {
-  font-size: 1.5rem;
-  margin-bottom: 10px;
+  font-size: 1.3rem;
+  margin-bottom: 8px;
   text-shadow: 2px 2px 0 #000;
+  flex-shrink: 0;
 }
 
 .enemy-hp-bar {
   position: relative;
   width: 80%;
   max-width: 300px;
-  height: 24px;
+  height: 22px;
   background: rgba(0,0,0,0.6);
-  border-radius: 12px;
+  border-radius: 11px;
   border: 2px solid #fff;
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .enemy-hp-fill {
@@ -425,13 +442,15 @@ html, body {
 }
 
 .enemy-sprite {
-  font-size: 8rem;
+  font-size: clamp(4rem, 18vh, 7rem);
   filter: drop-shadow(0 0 20px rgba(255,0,0,0.6));
   animation: enemyFloat 2s ease-in-out infinite;
+  flex-shrink: 1;
+  min-height: 0;
 }
 
 .enemy-sprite.boss {
-  font-size: 10rem;
+  font-size: clamp(5rem, 22vh, 9rem);
   filter: drop-shadow(0 0 30px rgba(255,0,0,0.9));
   animation: bossFloat 2s ease-in-out infinite;
 }
@@ -459,34 +478,36 @@ html, body {
 
 .battle-message {
   background: rgba(0,0,0,0.8);
-  padding: 12px 20px;
-  margin: 0 15px;
+  padding: 10px 15px;
+  margin: 0 10px;
   border-radius: 10px;
   border: 2px solid #ffd700;
   text-align: center;
-  font-size: 1rem;
-  min-height: 50px;
+  font-size: 0.95rem;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
+  flex-shrink: 0;
 }
 
 .player-battle-area {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 15px;
+  padding: 10px 15px;
   background: rgba(0,0,0,0.5);
   z-index: 2;
+  flex-shrink: 0;
 }
 
 .player-battle-sprite {
-  font-size: 3.5rem;
+  font-size: 2.8rem;
 }
 
 .player-battle-pet {
-  font-size: 2.5rem;
+  font-size: 2rem;
 }
 
 .player-battle-info {
@@ -515,12 +536,15 @@ html, body {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   padding: 10px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
   z-index: 2;
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.3);
 }
 
 .btn-battle {
-  padding: 18px 10px;
-  font-size: 1.1rem;
+  padding: 16px 10px;
+  font-size: 1.05rem;
   font-weight: bold;
   border: none;
   border-radius: 12px;

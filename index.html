@@ -38,12 +38,9 @@
     </div>
   </div>
 
-  <div class="field-container" id="field-bg">
-    <div class="field-scene" id="field-scene">
-      <!-- 風景がここに描画される -->
-    </div>
-    <div class="player-sprite" id="field-player">🧒</div>
-    <div class="pet-sprite" id="field-pet" style="display:none">🐶</div>
+  <!-- isometricマップ表示エリア -->
+  <div class="map-container" id="map-container">
+    <canvas id="map-canvas"></canvas>
   </div>
 
   <div class="exp-bar">
@@ -51,15 +48,31 @@
     <span class="exp-text">EXP <span id="player-exp">0</span>/<span id="player-next-exp">10</span></span>
   </div>
 
-  <div class="action-buttons">
-    <button class="btn-action btn-explore" onclick="explore()">🔍 冒険する</button>
-    <button class="btn-action btn-narrow" onclick="enterNarrowPath()" id="narrow-btn" style="display:none">🏔️ 狭い道へ</button>
-    <button class="btn-action btn-shop" onclick="openShop()">🏪 お店</button>
-    <button class="btn-action btn-menu" onclick="openMenu()">📋 メニュー</button>
-  </div>
-
+  <!-- メッセージ＆アクション -->
   <div class="message-box" id="field-message">
     草原を探検しよう！
+  </div>
+
+  <!-- 隣接時のアクションボタン -->
+  <div class="adjacent-actions" id="adjacent-actions" style="display:none">
+    <button class="btn-adj btn-fight" onclick="startBattleWithAdjacent()">⚔️ たたかう</button>
+    <button class="btn-adj btn-poke" onclick="pokeDragon()">👊 つつく</button>
+  </div>
+
+  <!-- 操作エリア：十字キー＋メニューボタン -->
+  <div class="control-area">
+    <div class="dpad">
+      <button class="dpad-btn dpad-up" data-dir="up" aria-label="うえ">▲</button>
+      <button class="dpad-btn dpad-left" data-dir="left" aria-label="ひだり">◀</button>
+      <button class="dpad-btn dpad-center" aria-label="ちゅうしん"></button>
+      <button class="dpad-btn dpad-right" data-dir="right" aria-label="みぎ">▶</button>
+      <button class="dpad-btn dpad-down" data-dir="down" aria-label="した">▼</button>
+    </div>
+    <div class="action-side">
+      <button class="btn-side btn-shop" onclick="openShop()">🏪<br>お店</button>
+      <button class="btn-side btn-narrow" onclick="enterNarrowPath()" id="narrow-btn" style="display:none">🏔️<br>狭い道</button>
+      <button class="btn-side btn-menu" onclick="openMenu()">📋<br>メニュー</button>
+    </div>
   </div>
 </div>
 
@@ -220,6 +233,7 @@
 </div>
 
 <script src="data.js"></script>
+<script src="map.js"></script>
 <script src="game.js"></script>
 </body>
 </html>

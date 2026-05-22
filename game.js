@@ -51,6 +51,9 @@ window.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem(SAVE_KEY)) {
     document.getElementById('load-btn').style.display = 'inline-block';
   }
+  // マップキャンバスと十字キー初期化
+  initMapCanvas();
+  initDpad();
 });
 
 // === ゲーム開始 ===
@@ -70,6 +73,9 @@ function startGame() {
     isBossBattle: false,
     shopTab: 'item',
   };
+  // マップを新規生成
+  mapState.tiles = [];
+  mapState._needsRegen = true;
   enterField();
 }
 
@@ -91,7 +97,29 @@ function loadGame() {
 function enterField() {
   showScreen('field-screen');
   updateFieldUI();
-  drawField();
+  
+  // 初回または狭い道に出入りしたときマップを生成
+  if (!mapState.tiles.length || mapState._needsRegen) {
+    generateMap();
+    mapState._needsRegen = false;
+  }
+  
+  // ペットの追従状態を更新
+  if (game.pet && !mapState.pet) {
+    mapState.pet = { x: mapState.player.x - 1, y: mapState.player.y };
+    if (isBlocked(mapState.pet.x, mapState.pet.y)) {
+      mapState.pet = { x: mapState.player.x, y: mapState.player.y };
+    }
+  } else if (!game.pet) {
+    mapState.pet = null;
+  }
+  
+  // キャンバスサイズ反映と描画
+  requestAnimationFrame(() => {
+    resizeMapCanvas();
+    updateAdjacentActions();
+  });
+  
   showMessage(getFieldMessage());
 }
 
@@ -99,51 +127,11 @@ function getFieldMessage() {
   if (game.inNarrowPath) {
     return "せまい道を 進んでいる... ボスが ちかい！";
   }
-  const f = FIELDS[game.currentField];
-  return `${f.name}を 探検しよう！ (あと${STEPS_TO_BOSS - game.encounterCount}回で 狭い道が 現れる)`;
-}
-
-function drawField() {
-  const container = document.getElementById('field-bg');
-  const scene = document.getElementById('field-scene');
-  
-  if (game.inNarrowPath) {
-    container.className = 'field-container narrow';
-  } else {
-    const f = FIELDS[game.currentField];
-    container.className = 'field-container ' + f.className;
-  }
-  
-  // 風景要素をランダム配置
-  scene.innerHTML = '';
-  const f = game.inNarrowPath 
-    ? { elements: ["🪨", "🌑", "⛰️"] }
-    : FIELDS[game.currentField];
-  
-  for (let i = 0; i < 8; i++) {
-    const el = document.createElement('div');
-    el.className = 'scene-element';
-    el.textContent = f.elements[Math.floor(Math.random() * f.elements.length)];
-    el.style.left = (Math.random() * 80 + 5) + '%';
-    el.style.top = (Math.random() * 60 + 10) + '%';
-    el.style.fontSize = (Math.random() * 1.5 + 1.5) + 'rem';
-    el.style.opacity = 0.4 + Math.random() * 0.5;
-    scene.appendChild(el);
-  }
-  
-  // ペット表示
-  const fieldPet = document.getElementById('field-pet');
-  if (game.pet) {
-    fieldPet.textContent = game.pet.emoji;
-    fieldPet.style.display = 'block';
-  } else {
-    fieldPet.style.display = 'none';
-  }
+  return `${FIELDS[game.currentField].name}を 探検しよう！`;
 }
 
 function updateFieldUI() {
   const maxHp = getTotalMaxHp();
-  // HPが上限を超えないように
   if (game.player.hp > maxHp) game.player.hp = maxHp;
   
   document.getElementById('player-level').textContent = game.player.level;
@@ -161,59 +149,76 @@ function updateFieldUI() {
   document.getElementById('player-next-exp').textContent = expNeeded;
   document.getElementById('exp-fill').style.width = (game.player.exp / expNeeded * 100) + '%';
   
-  // 狭い道ボタンの表示
+  // 狭い道ボタンの表示：マップ上のドラゴンを倒すと進める
+  // 5体以上倒した、または現在のマップに敵がいなければ
   const narrowBtn = document.getElementById('narrow-btn');
-  if (game.encounterCount >= STEPS_TO_BOSS && !game.inNarrowPath) {
-    narrowBtn.style.display = 'block';
-  } else {
-    narrowBtn.style.display = 'none';
-  }
+  const canEnterNarrow = !game.inNarrowPath && 
+    (game.player.defeatedCount >= 3 || (mapState.tiles.length > 0 && mapState.enemies.length === 0));
+  narrowBtn.style.display = canEnterNarrow ? 'flex' : 'none';
 }
 
 function showMessage(text) {
-  document.getElementById('field-message').textContent = text;
-}
-
-// === 冒険する ===
-function explore() {
-  if (game.inNarrowPath) {
-    // 狭い道での冒険：落とし穴か通常ドラゴン
-    const r = Math.random();
-    if (r < 0.3) {
-      // 落とし穴に落ちる！
-      fallIntoPit();
-    } else {
-      encounterEnemy(false);
-    }
-  } else {
-    // 通常フィールド：ドラゴン出現 or フィールド変化
-    if (Math.random() < 0.15 && game.encounterCount > 0) {
-      // フィールド変化
-      changeField();
-    } else {
-      encounterEnemy(false);
-    }
-  }
-}
-
-function changeField() {
-  let newField;
-  do {
-    newField = Math.floor(Math.random() * FIELDS.length);
-  } while (newField === game.currentField && FIELDS.length > 1);
-  
-  game.currentField = newField;
-  drawField();
-  showMessage(`${FIELDS[newField].name} に やってきた！`);
+  const el = document.getElementById('field-message');
+  if (el) el.textContent = text;
 }
 
 // === 狭い道に入る ===
 function enterNarrowPath() {
   game.inNarrowPath = true;
-  game.encounterCount = 0;
-  drawField();
-  updateFieldUI();
-  showMessage("せまい道に 入った... ボスが まっている！");
+  mapState._needsRegen = true;
+  enterField();
+  // 狭い道では中央にボスを配置
+  setTimeout(() => spawnBossInNarrowPath(), 100);
+}
+
+function spawnBossInNarrowPath() {
+  // ボスを少し離れた場所に配置
+  const px = mapState.player.x;
+  const py = mapState.player.y;
+  // できれば斜めの遠めの場所
+  const positions = [
+    { x: px + 3, y: py + 3 },
+    { x: px - 3, y: py + 3 },
+    { x: px + 3, y: py - 3 },
+    { x: px - 3, y: py - 3 },
+    { x: px + 4, y: py },
+    { x: px, y: py + 4 },
+  ];
+  for (const pos of positions) {
+    if (pos.x < 0 || pos.x >= MAP_SIZE || pos.y < 0 || pos.y >= MAP_SIZE) continue;
+    if (isBlocked(pos.x, pos.y)) continue;
+    // ボス出現位置周辺をクリアにする
+    mapState.tiles[pos.y][pos.x] = TILE.PATH;
+    
+    const availableBosses = BOSS_DRAGONS.filter(b => b.level <= game.player.level + 2);
+    const bossData = availableBosses.length > 0
+      ? availableBosses[Math.floor(Math.random() * availableBosses.length)]
+      : BOSS_DRAGONS[0];
+    
+    mapState.enemies.push({
+      x: pos.x,
+      y: pos.y,
+      data: bossData,
+      id: 'boss_' + Date.now(),
+      hp: bossData.hp,
+      isBoss: true,
+    });
+    showMessage("ボスドラゴンが いる！ 近づいて たたかおう！");
+    drawMap();
+    return;
+  }
+}
+
+// === explore は廃止（マップ歩行に置き換え） ===
+
+// === 落とし穴判定（歩いた時にランダム発生） ===
+// 狭い道で歩くたびに低確率で落とし穴
+function checkPitTrap() {
+  if (game.inNarrowPath && Math.random() < 0.05) {
+    fallIntoPit();
+    return true;
+  }
+  return false;
 }
 
 // === 落とし穴 ===
@@ -505,24 +510,34 @@ function closeVictoryPopup() {
   document.getElementById('victory-popup').style.display = 'none';
   
   const wasBoss = game.isBossBattle;
+  const defeatedEnemyId = game.currentEnemy ? game.currentEnemy._mapEnemyId : null;
   game.currentEnemy = null;
   game.isBossBattle = false;
   
-  // レベルアップチェック（OK押した後にレベルアップ表示）
+  // マップ上の敵を削除
+  if (defeatedEnemyId) {
+    mapState.enemies = mapState.enemies.filter(e => e.id !== defeatedEnemyId);
+  }
+  
+  // レベルアップチェック
   const expNeeded = expForNextLevel(game.player.level);
   if (game.player.exp >= expNeeded) {
     levelUp();
   }
   
   if (wasBoss) {
+    // ボスを倒したら通常フィールドに戻り、新マップを生成
     game.inNarrowPath = false;
-    game.encounterCount = 0;
-    changeField();
+    mapState._needsRegen = true;
+    game.currentField = (game.currentField + 1) % FIELDS.length;
     enterField();
-    showMessage("ボスを倒した！ 新しい場所へ！");
+    showMessage("ボスを倒した！ あたらしい場所に きた！");
   } else {
-    game.encounterCount++;
     enterField();
+    // 全部倒したら次のエリアへの案内
+    if (mapState.enemies.length === 0) {
+      showMessage("このエリアの ドラゴンを すべて 倒した！ せまい道へ 進める！");
+    }
   }
 }
 

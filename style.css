@@ -207,72 +207,166 @@ html, body {
 
 /* === フィールド画面 === */
 #field-screen {
-  background: #0f3460;
+  background: #1a3a1a;
 }
 
-.field-container {
+/* マップ表示エリア */
+.map-container {
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, #87ceeb 0%, #98d98e 60%, #6b8e23 100%);
+  background: #0d1f0d;
+  min-height: 0;
 }
 
-.field-container.forest {
-  background: linear-gradient(180deg, #4a7c4e 0%, #2d5a2e 100%);
-}
-
-.field-container.rocky {
-  background: linear-gradient(180deg, #b8a98c 0%, #8b7355 100%);
-}
-
-.field-container.river {
-  background: linear-gradient(180deg, #87ceeb 0%, #4a90c2 60%, #2e5d82 100%);
-}
-
-.field-container.narrow {
-  background: linear-gradient(180deg, #4a3a2a 0%, #2a1f15 100%);
-}
-
-.field-scene {
+#map-canvas {
   position: absolute;
-  inset: 0;
-  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
 }
 
-.scene-element {
-  position: absolute;
-  font-size: 3rem;
-  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+/* 隣接時のアクションボタン */
+.adjacent-actions {
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(0,0,0,0.4);
+  flex-shrink: 0;
+  animation: pulseGlow 1.5s ease-in-out infinite;
 }
 
-.player-sprite {
-  position: absolute;
-  bottom: 30%;
-  left: 30%;
-  font-size: 3.5rem;
-  filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.4));
-  animation: playerBob 2s ease-in-out infinite;
-  z-index: 10;
+@keyframes pulseGlow {
+  0%, 100% { background: rgba(255, 235, 59, 0.15); }
+  50% { background: rgba(255, 235, 59, 0.35); }
 }
 
-.pet-sprite {
-  position: absolute;
-  bottom: 30%;
-  left: 18%;
-  font-size: 2.5rem;
-  filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.4));
-  animation: petBob 1.5s ease-in-out infinite;
-  z-index: 9;
+.btn-adj {
+  flex: 1;
+  padding: 14px 8px;
+  font-size: 1.05rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  color: white;
+  font-family: inherit;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.3);
 }
 
-@keyframes playerBob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+.btn-fight {
+  background: linear-gradient(135deg, #f44336, #b71c1c);
 }
 
-@keyframes petBob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+.btn-poke {
+  background: linear-gradient(135deg, #ff9800, #e65100);
+}
+
+.btn-adj:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.3);
+}
+
+/* 操作エリア：十字キー＋メニュー */
+.control-area {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.7));
+  flex-shrink: 0;
+  align-items: center;
+}
+
+/* 十字キー */
+.dpad {
+  display: grid;
+  grid-template-columns: 50px 50px 50px;
+  grid-template-rows: 50px 50px 50px;
+  grid-template-areas:
+    ".    up   ."
+    "left center right"
+    ".    down ."
+  ;
+  gap: 4px;
+}
+
+.dpad-btn {
+  background: linear-gradient(135deg, #455a64, #263238);
+  color: white;
+  border: 2px solid #607d8b;
+  border-radius: 10px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.5);
+  transition: transform 0.05s;
+}
+
+.dpad-up    { grid-area: up; }
+.dpad-down  { grid-area: down; }
+.dpad-left  { grid-area: left; }
+.dpad-right { grid-area: right; }
+.dpad-center {
+  grid-area: center;
+  background: #1a1a1a;
+  border-color: #333;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+  cursor: default;
+}
+
+.dpad-btn:active:not(.dpad-center) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.5);
+  background: linear-gradient(135deg, #ff6b6b, #e94560);
+}
+
+/* サイドのメニューボタン */
+.action-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.btn-side {
+  padding: 10px 6px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  color: white;
+  font-family: inherit;
+  line-height: 1.2;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.3);
+  text-align: center;
+}
+
+.btn-side.btn-shop  { background: linear-gradient(135deg, #ff9800, #e65100); }
+.btn-side.btn-menu  { background: linear-gradient(135deg, #607d8b, #37474f); }
+.btn-side.btn-narrow {
+  background: linear-gradient(135deg, #9c27b0, #6a1b9a);
+  animation: narrowGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes narrowGlow {
+  0%, 100% { box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 0 0 rgba(156,39,176,0); }
+  50% { box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 0 15px rgba(156,39,176,0.9); }
+}
+
+.btn-side:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.3);
 }
 
 /* === EXPバー === */
@@ -305,66 +399,17 @@ html, body {
   text-shadow: 1px 1px 2px #000;
 }
 
-/* === アクションボタン === */
-.action-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding: 10px;
-  flex-shrink: 0;
-}
-
-.btn-action {
-  padding: 15px 10px;
-  font-size: 1rem;
-  font-weight: bold;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  color: white;
-  font-family: inherit;
-  transition: transform 0.1s;
-  box-shadow: 0 4px 0 rgba(0,0,0,0.3);
-}
-
-.btn-explore {
-  background: linear-gradient(135deg, #4caf50, #2e7d32);
-}
-
-.btn-narrow {
-  background: linear-gradient(135deg, #9c27b0, #6a1b9a);
-  animation: glow 1.5s ease-in-out infinite;
-}
-
-@keyframes glow {
-  0%, 100% { box-shadow: 0 4px 0 rgba(0,0,0,0.3), 0 0 0 rgba(156,39,176,0); }
-  50% { box-shadow: 0 4px 0 rgba(0,0,0,0.3), 0 0 20px rgba(156,39,176,0.8); }
-}
-
-.btn-shop {
-  background: linear-gradient(135deg, #ff9800, #e65100);
-}
-
-.btn-menu {
-  background: linear-gradient(135deg, #607d8b, #37474f);
-}
-
-.btn-action:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 rgba(0,0,0,0.3);
-}
-
 /* === メッセージボックス === */
 .message-box {
   background: rgba(0,0,0,0.7);
-  margin: 0 10px 10px;
-  padding: 12px 15px;
+  margin: 6px 10px;
+  padding: 10px 15px;
   border-radius: 10px;
   border: 2px solid #4ecdc4;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   text-align: center;
   flex-shrink: 0;
-  min-height: 50px;
+  min-height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;

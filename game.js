@@ -357,11 +357,13 @@ function showDamage(targetEl, damage, isPlayer = false) {
 
 // === プレイヤー攻撃 ===
 function playerAttack() {
+  console.log('[ATTACK] called');
   disableBattleButtons();
   
   const damage = getTotalAttack() + Math.floor(Math.random() * 3);
   const enemy = game.currentEnemy;
   enemy.currentHp -= damage;
+  console.log('[ATTACK] damage:', damage, 'enemy HP:', enemy.currentHp);
   
   const sprite = document.getElementById('enemy-sprite');
   sprite.classList.add('hit');
@@ -373,6 +375,7 @@ function playerAttack() {
   setTimeout(() => {
     updateBattleUI();
     if (enemy.currentHp <= 0) {
+      console.log('[ATTACK] enemy defeated, calling victory()');
       victory();
     } else {
       enemyAttack();
@@ -437,70 +440,83 @@ function enableBattleButtons() {
 
 // === 勝利 ===
 function victory() {
-  const enemy = game.currentEnemy;
-  game.player.exp += enemy.exp;
-  game.player.gold += enemy.gold;
-  game.player.defeatedCount++;
-  game.defeatedEnemies.push(enemy.name);
+  console.log('[VICTORY] called', game.currentEnemy);
   
-  document.getElementById('victory-title').textContent = enemy.isBoss ? '🎊 ボス撃破！ 🎊' : '🎊 勝利！ 🎊';
-  document.getElementById('victory-enemy').textContent = enemy.name;
-  document.getElementById('victory-exp').textContent = enemy.exp;
-  document.getElementById('victory-gold').textContent = enemy.gold;
-  
-  // ボス撃破時のドロップアイテム
-  const itemArea = document.getElementById('victory-item-area');
-  if (enemy.isBoss && enemy.dropItem) {
-    itemArea.style.display = 'block';
-    document.getElementById('victory-item').textContent = enemy.dropItem;
-    // インベントリに追加
-    game.inventory.push({
-      id: 'drop_' + Date.now(),
-      name: enemy.dropItem,
-      emoji: '✨',
-      desc: 'ボスが落とした きちょうな しなもの',
-      type: 'treasure'
-    });
-  } else {
-    itemArea.style.display = 'none';
+  try {
+    const enemy = game.currentEnemy;
+    if (!enemy) {
+      console.error('[VICTORY] enemy is null!');
+      return;
+    }
+    
+    game.player.exp += enemy.exp;
+    game.player.gold += enemy.gold;
+    game.player.defeatedCount++;
+    game.defeatedEnemies.push(enemy.name);
+    
+    document.getElementById('victory-title').textContent = enemy.isBoss ? '🎊 ボス撃破！ 🎊' : '🎊 勝利！ 🎊';
+    document.getElementById('victory-enemy').textContent = enemy.name;
+    document.getElementById('victory-exp').textContent = enemy.exp;
+    document.getElementById('victory-gold').textContent = enemy.gold;
+    
+    // ボス撃破時のドロップアイテム
+    const itemArea = document.getElementById('victory-item-area');
+    if (enemy.isBoss && enemy.dropItem) {
+      itemArea.style.display = 'block';
+      document.getElementById('victory-item').textContent = enemy.dropItem;
+      game.inventory.push({
+        id: 'drop_' + Date.now(),
+        name: enemy.dropItem,
+        emoji: '✨',
+        desc: 'ボスが落とした きちょうな しなもの',
+        type: 'treasure'
+      });
+    } else {
+      itemArea.style.display = 'none';
+    }
+    
+    // 勝利ポップアップを表示
+    const popup = document.getElementById('victory-popup');
+    popup.classList.add('show');
+    popup.style.display = 'flex';  // 念のため明示的に
+    console.log('[VICTORY] popup shown');
+    
+    // 自動セーブ
+    autoSave();
+  } catch (err) {
+    console.error('[VICTORY] error:', err);
+    alert('エラー: ' + err.message);
   }
-  
-  // レベルアップチェック
-  const expNeeded = expForNextLevel(game.player.level);
-  if (game.player.exp >= expNeeded) {
-    document.getElementById('victory-popup').classList.add('show');
-    setTimeout(() => {
-      closeVictoryPopupSilent();
-      levelUp();
-    }, 100);
-  } else {
-    document.getElementById('victory-popup').classList.add('show');
-  }
-  
-  // 自動セーブ
-  autoSave();
 }
 
 function closeVictoryPopupSilent() {
   document.getElementById('victory-popup').classList.remove('show');
+  document.getElementById('victory-popup').style.display = 'none';
 }
 
 function closeVictoryPopup() {
+  console.log('[CLOSE_VICTORY] called');
+  
   document.getElementById('victory-popup').classList.remove('show');
+  document.getElementById('victory-popup').style.display = 'none';
   
   const wasBoss = game.isBossBattle;
   game.currentEnemy = null;
   game.isBossBattle = false;
   
+  // レベルアップチェック（OK押した後にレベルアップ表示）
+  const expNeeded = expForNextLevel(game.player.level);
+  if (game.player.exp >= expNeeded) {
+    levelUp();
+  }
+  
   if (wasBoss) {
-    // ボス撃破後は通常フィールドに戻る
     game.inNarrowPath = false;
     game.encounterCount = 0;
     changeField();
     enterField();
     showMessage("ボスを倒した！ 新しい場所へ！");
   } else {
-    // 通常戦闘後
     game.encounterCount++;
     enterField();
   }

@@ -264,6 +264,10 @@ html, body {
   background: linear-gradient(135deg, #ff9800, #e65100);
 }
 
+.btn-rest {
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+}
+
 .btn-adj:active {
   transform: translateY(2px);
   box-shadow: 0 2px 0 rgba(0,0,0,0.3);
@@ -288,26 +292,41 @@ html, body {
   flex-direction: row-reverse;
 }
 
-/* 十字キー（半分くらいのサイズに） */
-.dpad {
-  display: grid;
-  grid-template-columns: 32px 32px 32px;
-  grid-template-rows: 32px 32px 32px;
-  grid-template-areas:
-    ".    up   ."
-    "left center right"
-    ".    down ."
-  ;
-  gap: 3px;
+/* 丸形コントローラー（isometricの軸に沿った斜め4方向） */
+.dpad-circle {
+  position: relative;
+  width: 120px;
+  height: 120px;
   flex-shrink: 0;
+  background: radial-gradient(circle at center, #2a2a2a 0%, #1a1a1a 70%);
+  border-radius: 50%;
+  box-shadow: 
+    inset 0 3px 6px rgba(0,0,0,0.6),
+    0 2px 4px rgba(255,255,255,0.1);
+  border: 2px solid #455a64;
 }
 
-.dpad-btn {
-  background: linear-gradient(135deg, #455a64, #263238);
+.dpad-center-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #607d8b;
+  font-size: 0.7rem;
+  font-weight: bold;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dpad-circle .dpad-btn {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #546e7a, #37474f);
   color: white;
-  border: 2px solid #607d8b;
-  border-radius: 7px;
-  font-size: 0.95rem;
+  border: 2px solid #78909c;
+  border-radius: 50%;
+  font-size: 1.4rem;
   font-weight: bold;
   cursor: pointer;
   font-family: inherit;
@@ -318,26 +337,21 @@ html, body {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   box-shadow: 0 2px 0 rgba(0,0,0,0.5);
-  transition: transform 0.05s;
+  transition: transform 0.05s, background 0.1s;
   padding: 0;
+  line-height: 1;
 }
 
-.dpad-up    { grid-area: up; }
-.dpad-down  { grid-area: down; }
-.dpad-left  { grid-area: left; }
-.dpad-right { grid-area: right; }
-.dpad-center {
-  grid-area: center;
-  background: #1a1a1a;
-  border-color: #333;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
-  cursor: default;
-}
+/* 斜め4方向の配置 */
+.dpad-ne { top: 5px;    right: 5px; }   /* 右上 */
+.dpad-nw { top: 5px;    left: 5px; }    /* 左上 */
+.dpad-se { bottom: 5px; right: 5px; }   /* 右下 */
+.dpad-sw { bottom: 5px; left: 5px; }    /* 左下 */
 
-.dpad-btn:active:not(.dpad-center) {
-  transform: translateY(1px);
-  box-shadow: 0 1px 0 rgba(0,0,0,0.5);
+.dpad-circle .dpad-btn:active {
+  transform: scale(0.92);
   background: linear-gradient(135deg, #ff6b6b, #e94560);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.5);
 }
 
 /* サイドのメニューボタン */

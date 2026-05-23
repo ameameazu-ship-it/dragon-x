@@ -18,7 +18,15 @@ const TILE = {
   BUSH:   { id: 'bush',   emoji: '🌿', color: '#7cb342', accent: '#558b2f', name: '草むら' },
   SAND:   { id: 'sand',   emoji: '',   color: '#fff59d', accent: '#fbc02d', name: '砂地' },
   PATH:   { id: 'path',   emoji: '',   color: '#bcaaa4', accent: '#795548', name: '道' },
+  HOUSE:  { id: 'house',  emoji: '🏠', color: '#d7ccc8', accent: '#8d6e63', name: '家',     blocked: true },
 };
+
+// === マップ上に落ちている回復アイテム ===
+const PICKUP_ITEMS = [
+  { id: 'pickup_apple',  name: 'りんご', emoji: '🍎', desc: 'HP+8',  type: 'heal', value: 8 },
+  { id: 'pickup_bread',  name: 'パン',   emoji: '🍞', desc: 'HP+20', type: 'heal', value: 20 },
+  { id: 'pickup_potion', name: 'ちいさなポーション', emoji: '🧪', desc: 'HP+15', type: 'heal', value: 15 },
+];
 
 // === マップ状態 ===
 let mapState = {
@@ -26,6 +34,8 @@ let mapState = {
   player: { x: 6, y: 6, facing: 'down' },
   pet: null,       // {x, y}
   enemies: [],     // [{x, y, data, id}]
+  pickups: [],     // [{x, y, item}]  マップ上に落ちているアイテム
+  house: null,     // {x, y}  家の位置（狭い道では null）
   width: MAP_SIZE,
   height: MAP_SIZE,
   cameraX: 0,
@@ -65,6 +75,8 @@ function generateMap() {
   mapState.player.x = px;
   mapState.player.y = py;
   mapState.enemies = [];
+  mapState.pickups = [];
+  mapState.house = null;
   
   // ペット同伴
   if (game.pet) {
@@ -73,8 +85,75 @@ function generateMap() {
     mapState.pet = null;
   }
   
+  // 通常フィールドには家を配置（狭い道には配置しない）
+  if (!game.inNarrowPath) {
+    placeHouse();
+  }
+  
   // 敵を配置
   spawnEnemies(3 + Math.floor(Math.random() * 2));
+  
+  // 拾える回復アイテムを配置（2〜4個）
+  spawnPickups(2 + Math.floor(Math.random() * 3));
+}
+
+// === 家を配置（プレイヤーから少し離れた場所） ===
+function placeHouse() {
+  const px = mapState.player.x;
+  const py = mapState.player.y;
+  // プレイヤーから3〜5マス離れた場所を探す
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const hx = Math.floor(Math.random() * MAP_SIZE);
+    const hy = Math.floor(Math.random() * MAP_SIZE);
+    const dist = Math.abs(hx - px) + Math.abs(hy - py);
+    if (dist >= 3 && dist <= 6) {
+      // 家の位置と周囲をクリアに
+      mapState.tiles[hy][hx] = TILE.HOUSE;
+      // 家の前にも空きスペース確保（隣接できるよう）
+      const neighbors = [
+        { x: hx - 1, y: hy }, { x: hx + 1, y: hy },
+        { x: hx, y: hy - 1 }, { x: hx, y: hy + 1 },
+      ];
+      let openCount = 0;
+      for (const n of neighbors) {
+        if (n.x >= 0 && n.x < MAP_SIZE && n.y >= 0 && n.y < MAP_SIZE) {
+          if (mapState.tiles[n.y][n.x].id !== 'house') {
+            mapState.tiles[n.y][n.x] = TILE.GRASS;
+            openCount++;
+          }
+        }
+      }
+      if (openCount > 0) {
+        mapState.house = { x: hx, y: hy };
+        return;
+      }
+    }
+  }
+}
+
+// === 拾える回復アイテムを配置 ===
+function spawnPickups(count) {
+  for (let i = 0; i < count; i++) {
+    for (let attempt = 0; attempt < 30; attempt++) {
+      const x = Math.floor(Math.random() * MAP_SIZE);
+      const y = Math.floor(Math.random() * MAP_SIZE);
+      if (isBlocked(x, y)) continue;
+      if (x === mapState.player.x && y === mapState.player.y) continue;
+      if (getEnemyAt(x, y)) continue;
+      if (getPickupAt(x, y)) continue;
+      // 配置
+      const item = PICKUP_ITEMS[Math.floor(Math.random() * PICKUP_ITEMS.length)];
+      mapState.pickups.push({
+        x, y,
+        item: { ...item, id: item.id + '_' + Date.now() + '_' + i }
+      });
+      break;
+    }
+  }
+}
+
+function getPickupAt(x, y) {
+  return mapState.pickups.find(p => p.x === x && p.y === y);
 }
 
 // === 敵の配置 ===
@@ -185,11 +264,12 @@ function drawMap() {
       if (tile.emoji && tile.id !== 'flower' && tile.id !== 'bush') {
         objects.push({ x, y, type: 'tile', tile });
       } else if (tile.emoji) {
-        // 小さい装飾は地面に直接描画したいので低優先度
         objects.push({ x, y, type: 'decor', tile });
       }
     }
   }
+  // 拾えるアイテム
+  mapState.pickups.forEach(p => objects.push({ x: p.x, y: p.y, type: 'pickup', pickup: p }));
   // 敵
   mapState.enemies.forEach(e => objects.push({ x: e.x, y: e.y, type: 'enemy', enemy: e }));
   // ペット
@@ -199,8 +279,8 @@ function drawMap() {
   // プレイヤー
   objects.push({ x: mapState.player.x, y: mapState.player.y, type: 'player' });
   
-  // y+xでソート（奥から手前）。同じならtypeで優先順位（地形→装飾→キャラ）
-  const typeOrder = { tile: 0, decor: 1, enemy: 2, pet: 3, player: 4 };
+  // y+xでソート（奥から手前）
+  const typeOrder = { tile: 0, decor: 1, pickup: 2, enemy: 3, pet: 4, player: 5 };
   objects.sort((a, b) => {
     const da = a.x + a.y;
     const db = b.x + b.y;
@@ -213,8 +293,14 @@ function drawMap() {
     const px = isoX(obj.x, obj.y) + offsetX;
     const py = isoY(obj.x, obj.y) + offsetY;
     
-    if (obj.type === 'tile' || obj.type === 'decor') {
-      drawEmojiOnTile(obj.tile.emoji, px, py, obj.type === 'decor' ? 22 : 36);
+    if (obj.type === 'tile') {
+      // 家は大きめに描画
+      const size = obj.tile.id === 'house' ? 48 : 36;
+      drawEmojiOnTile(obj.tile.emoji, px, py, size);
+    } else if (obj.type === 'decor') {
+      drawEmojiOnTile(obj.tile.emoji, px, py, 22);
+    } else if (obj.type === 'pickup') {
+      drawPickup(obj.pickup, px, py);
     } else if (obj.type === 'enemy') {
       drawEnemySprite(obj.enemy, px, py);
     } else if (obj.type === 'pet') {
@@ -236,6 +322,40 @@ function drawMap() {
     mapCtx.stroke();
     mapCtx.restore();
   }
+  
+  // 隣接する家をハイライト
+  if (isAdjacentToHouse()) {
+    const hx = isoX(mapState.house.x, mapState.house.y) + offsetX;
+    const hy = isoY(mapState.house.x, mapState.house.y) + offsetY;
+    mapCtx.save();
+    mapCtx.strokeStyle = 'rgba(76, 175, 80, 0.9)';
+    mapCtx.lineWidth = 3;
+    drawDiamond(hx, hy, ISO_W - 4, ISO_H - 2);
+    mapCtx.stroke();
+    mapCtx.restore();
+  }
+}
+
+// === 拾えるアイテム描画 ===
+function drawPickup(pickup, px, py) {
+  mapCtx.save();
+  // 光るオーラ
+  const aura = mapCtx.createRadialGradient(px, py - 6, 2, px, py - 6, 22);
+  aura.addColorStop(0, 'rgba(255, 235, 59, 0.6)');
+  aura.addColorStop(1, 'rgba(255, 235, 59, 0)');
+  mapCtx.fillStyle = aura;
+  mapCtx.fillRect(px - 25, py - 25, 50, 35);
+  
+  // 上下に揺れるアニメーション
+  const bob = Math.sin(Date.now() / 300 + px) * 3;
+  
+  mapCtx.font = '24px sans-serif';
+  mapCtx.textAlign = 'center';
+  mapCtx.textBaseline = 'bottom';
+  mapCtx.shadowColor = 'rgba(0,0,0,0.5)';
+  mapCtx.shadowBlur = 4;
+  mapCtx.fillText(pickup.item.emoji, px, py + 4 + bob);
+  mapCtx.restore();
 }
 
 function drawTile(x, y, offsetX, offsetY) {
@@ -344,9 +464,46 @@ function getAdjacentEnemy() {
   return null;
 }
 
+function isAdjacentToHouse() {
+  if (!mapState.house) return false;
+  const dx = Math.abs(mapState.house.x - mapState.player.x);
+  const dy = Math.abs(mapState.house.y - mapState.player.y);
+  return (dx + dy === 1);  // 上下左右の隣接のみ
+}
+
+// === 拾得処理 ===
+function pickupAtPlayerPos() {
+  const p = getPickupAt(mapState.player.x, mapState.player.y);
+  if (!p) return;
+  
+  // インベントリに追加
+  game.inventory.push({
+    id: p.item.id,
+    name: p.item.name,
+    emoji: p.item.emoji,
+    desc: p.item.desc,
+    type: 'heal',
+    value: p.item.value,
+  });
+  // マップから削除
+  mapState.pickups = mapState.pickups.filter(x => x !== p);
+  showMessage(`${p.item.emoji} ${p.item.name} を ひろった！`);
+  autoSave();
+}
+
 // === プレイヤー移動 ===
+// 方向：画面上の見た目に対応（isometric軸に沿う）
+// ne(↗) = 画面右上 = gy-1
+// nw(↖) = 画面左上 = gx-1
+// se(↘) = 画面右下 = gx+1
+// sw(↙) = 画面左下 = gy+1
 function movePlayer(dir) {
   const dirs = {
+    ne: { dx: 0,  dy: -1 },  // 右上：上方向に進む
+    nw: { dx: -1, dy: 0 },   // 左上：左方向に進む
+    se: { dx: 1,  dy: 0 },   // 右下：右方向に進む
+    sw: { dx: 0,  dy: 1 },   // 左下：下方向に進む
+    // 旧キー名も互換維持（キーボード用）
     up:    { dx: 0,  dy: -1 },
     down:  { dx: 0,  dy: 1 },
     left:  { dx: -1, dy: 0 },
@@ -394,6 +551,9 @@ function movePlayer(dir) {
     mapState.pet.y = oldY;
   }
   
+  // アイテム拾得チェック
+  pickupAtPlayerPos();
+  
   drawMap();
   updateAdjacentActions();
   
@@ -401,6 +561,10 @@ function movePlayer(dir) {
   const adj = getAdjacentEnemy();
   if (adj) {
     showMessage(`${adj.data.name} が ちかくに いる！`);
+  } else if (isAdjacentToHouse()) {
+    showMessage("🏠 いえに ついた！ ここで やすめる");
+  } else if (getPickupAt(mapState.player.x, mapState.player.y)) {
+    // 拾得直後はメッセージそのまま
   } else if (mapState.enemies.length === 0) {
     showMessage("このエリアの ドラゴンは すべて 倒した！");
   } else {
@@ -412,11 +576,35 @@ function movePlayer(dir) {
 function updateAdjacentActions() {
   const adj = getAdjacentEnemy();
   const area = document.getElementById('adjacent-actions');
+  const restBtn = document.getElementById('rest-btn');
+  
   if (adj) {
+    // 敵が隣にいる：たたかう・つつくボタン
     area.style.display = 'flex';
+    document.getElementById('fight-btn').style.display = 'block';
+    document.getElementById('poke-btn').style.display = 'block';
+    if (restBtn) restBtn.style.display = 'none';
+  } else if (isAdjacentToHouse()) {
+    // 家が隣にいる：休むボタン
+    area.style.display = 'flex';
+    document.getElementById('fight-btn').style.display = 'none';
+    document.getElementById('poke-btn').style.display = 'none';
+    if (restBtn) restBtn.style.display = 'block';
   } else {
     area.style.display = 'none';
   }
+}
+
+// === 家で休む ===
+function restAtHome() {
+  if (!isAdjacentToHouse()) return;
+  const maxHp = getTotalMaxHp();
+  const healed = maxHp - game.player.hp;
+  game.player.hp = maxHp;
+  showMessage(`いえで やすんだ！ HP+${healed} ぜんかい！`);
+  updateFieldUI();
+  drawMap();
+  autoSave();
 }
 
 // === ドラゴンを「つつく」 ===
@@ -537,12 +725,13 @@ function initDpad() {
   });
   
   // キーボード操作（PC用）
+  // 矢印キーは画面の見た目に合わせる：↑=右上、→=右下、↓=左下、←=左上
   document.addEventListener('keydown', (e) => {
     if (!document.getElementById('field-screen').classList.contains('active')) return;
     if (e.repeat) return;
-    if (e.key === 'ArrowUp' || e.key === 'w') movePlayer('up');
-    if (e.key === 'ArrowDown' || e.key === 's') movePlayer('down');
-    if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer('left');
-    if (e.key === 'ArrowRight' || e.key === 'd') movePlayer('right');
+    if (e.key === 'ArrowUp'    || e.key === 'w') movePlayer('ne');  // 右上
+    if (e.key === 'ArrowRight' || e.key === 'd') movePlayer('se');  // 右下
+    if (e.key === 'ArrowDown'  || e.key === 's') movePlayer('sw');  // 左下
+    if (e.key === 'ArrowLeft'  || e.key === 'a') movePlayer('nw');  // 左上
   });
 }

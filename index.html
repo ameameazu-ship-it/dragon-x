@@ -55,11 +55,12 @@
 
   <!-- 隣接時のアクションボタン -->
   <div class="adjacent-actions" id="adjacent-actions" style="display:none">
-    <button class="btn-adj btn-fight" onclick="startBattleWithAdjacent()">⚔️ たたかう</button>
-    <button class="btn-adj btn-poke" onclick="pokeDragon()">👊 つつく</button>
+    <button class="btn-adj btn-fight" id="fight-btn" onclick="startBattleWithAdjacent()">⚔️ たたかう</button>
+    <button class="btn-adj btn-poke" id="poke-btn" onclick="pokeDragon()">👊 つつく</button>
+    <button class="btn-adj btn-rest" id="rest-btn" onclick="restAtHome()" style="display:none">🛌 いえで やすむ</button>
   </div>
 
-  <!-- 操作エリア：十字キー＋メニューボタン（左右切替可能） -->
+  <!-- 操作エリア：丸形コントローラー＋メニューボタン（左右切替可能） -->
   <div class="control-area" id="control-area">
     <div class="action-side" id="action-side">
       <button class="btn-side btn-shop" onclick="openShop()">🏪<br>お店</button>
@@ -67,12 +68,13 @@
       <button class="btn-side btn-menu" onclick="openMenu()">📋<br>メニュー</button>
       <button class="btn-side btn-flip" onclick="toggleDpadSide()" title="左右切替">⇄<br>左右</button>
     </div>
-    <div class="dpad" id="dpad">
-      <button class="dpad-btn dpad-up" data-dir="up" aria-label="うえ">▲</button>
-      <button class="dpad-btn dpad-left" data-dir="left" aria-label="ひだり">◀</button>
-      <button class="dpad-btn dpad-center" aria-label="ちゅうしん"></button>
-      <button class="dpad-btn dpad-right" data-dir="right" aria-label="みぎ">▶</button>
-      <button class="dpad-btn dpad-down" data-dir="down" aria-label="した">▼</button>
+    <div class="dpad-circle" id="dpad">
+      <!-- 斜め4方向（isometricの軸に沿う） -->
+      <button class="dpad-btn dpad-ne" data-dir="ne" aria-label="みぎうえ">↗</button>
+      <button class="dpad-btn dpad-nw" data-dir="nw" aria-label="ひだりうえ">↖</button>
+      <button class="dpad-btn dpad-se" data-dir="se" aria-label="みぎした">↘</button>
+      <button class="dpad-btn dpad-sw" data-dir="sw" aria-label="ひだりした">↙</button>
+      <div class="dpad-center-label">移動</div>
     </div>
   </div>
 </div>
